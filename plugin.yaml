@@ -1,0 +1,17 @@
+schema: mcpg.dev/plugin/v1
+id: dev.mcpg.backend.amqp
+name: AMQP Binding
+license: Apache-2.0
+description: |
+  Runs AMQP 0.9.1 (RabbitMQ) messaging operations as MCP tools and resources.
+  `op: publish` sends a message (with a publisher confirm + mandatory-routing
+  check); `op: rpc` does request/reply (publishes with reply_to +
+  correlation_id and awaits the correlated reply on a private exclusive
+  queue); `op: get` pulls one message from a queue. The message body is the
+  tool's arguments JSON. Connections are reused (lapin) over rustls TLS; the
+  broker URI/password resolves through the gateway secret-resolver
+  (`${env.X}` / `vault://...`). Complements the kafka/nats backends.
+class: backend
+runtime: native-cdylib-v1
+protocol_version: "1.0"
+required_capabilities: [network_outbound]

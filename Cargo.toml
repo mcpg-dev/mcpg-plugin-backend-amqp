@@ -1,0 +1,48 @@
+[package]
+name = "mcpg-plugin-backend-amqp"
+version = "0.1.0-alpha.15"
+license = "Apache-2.0"
+edition = "2024"
+description = """
+AMQP 0.9.1 (RabbitMQ) backend binding plugin for mcpg. Publishes messages and
+runs request/reply (RPC) over a broker as MCP tools/resources — the message
+body is CEL-computed from the tool arguments, over a reused lapin connection
+(rustls TLS). Complements the kafka/nats backends. IBM MQ (FFI) deferred.
+"""
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = []
+cdylib-export = []
+static-firstparty = []
+# Gates the docker-backed RabbitMQ integration suite so plain `cargo test`
+# stays cheap. Run: `cargo test -p mcpg-plugin-backend-amqp --features integration-tests`.
+integration-tests = []
+
+[dependencies]
+mcpg-plugin-protocol = { git = "https://github.com/mcpg-dev/mcpg-plugin-protocol", tag = "v0.1.0-beta.13", version = "=0.1.0-beta.13" }
+mcpg-plugin-sdk      = { git = "https://github.com/mcpg-dev/mcpg-plugin-sdk", tag = "v0.1.0-beta.13", version = "=0.1.0-beta.13", features = ["static-firstparty"] }
+mcpg-plugin-host     = { git = "https://github.com/mcpg-dev/mcpg-plugin-host", tag = "v0.1.0-beta.13", version = "=0.1.0-beta.13" }
+async-trait    = "0.1"
+base64         = "0.22"
+chrono         = { version = "0.4", features = ["clock"] }
+# AMQP 0.9.1 client. Default features = [rustls, tokio]: built-in tokio
+# executor/reactor integration + rustls TLS (NOT native-tls — deny.toml bans
+# openssl/native-tls).
+lapin          = "4.10"
+metrics        = "0.24"
+serde          = { version = "1", features = ["derive"] }
+serde_json     = "1"
+tokio          = { version = "1", features = ["sync", "rt", "rt-multi-thread", "macros", "time"] }
+tracing        = "0.1"
+# `Consumer` is a Stream; we await the next RPC reply delivery.
+futures-util   = "0.3"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread", "net", "time"] }
+async-trait = "0.1"
+# Docker-backed RabbitMQ integration test (async runner). Dev-dep only.
+testcontainers = "0.27"
+
