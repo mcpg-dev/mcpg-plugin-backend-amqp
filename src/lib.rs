@@ -27,10 +27,22 @@ mod amqp;
 pub mod cdylib;
 mod envelope;
 mod types;
+/// The `amqp_queue` watch strategy: each queued message as an MCP Event.
+pub mod watch;
 
 use amqp::{ConnSlot, get_connection};
 use envelope::{build_result_envelope, classify_error};
 pub use types::{AmqpBackendSpec, AmqpOp};
+
+/// Install the crypto provider rustls builds TLS configurations from: a
+/// build that links both rustls providers has no default, and this
+/// cdylib's copy of rustls does not see the host's.
+pub(crate) fn install_crypto_provider() {
+    static INSTALL: std::sync::Once = std::sync::Once::new();
+    INSTALL.call_once(|| {
+        let _ = rustls::crypto::ring::default_provider().install_default();
+    });
+}
 
 /// Embedded plugin descriptor.
 pub const BINDING_DESCRIPTOR_YAML: &str = include_str!("../plugin.yaml");

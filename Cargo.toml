@@ -1,13 +1,14 @@
 [package]
 name = "mcpg-plugin-backend-amqp"
-version = "0.1.0-alpha.42"
+version = "0.1.0-alpha.43"
 license = "Apache-2.0"
 edition = "2024"
 description = """
 AMQP 0.9.1 (RabbitMQ) backend binding plugin for mcpg. Publishes messages and
 runs request/reply (RPC) over a broker as MCP tools/resources — the message
 body is CEL-computed from the tool arguments, over a reused lapin connection
-(rustls TLS). Complements the kafka/nats backends. IBM MQ (FFI) deferred.
+(rustls TLS) — and consumes a queue as MCP Events, acking each message once
+the gateway has stored it. Complements the kafka/nats backends.
 """
 
 [lib]
@@ -22,9 +23,9 @@ static-firstparty = []
 integration-tests = []
 
 [dependencies]
-mcpg-plugin-protocol = { git = "https://github.com/mcpg-dev/mcpg-plugin-protocol", tag = "v0.1.0-beta.39", version = "=0.1.0-beta.39" }
-mcpg-plugin-sdk      = { git = "https://github.com/mcpg-dev/mcpg-plugin-sdk", tag = "v0.1.0-beta.40", version = "=0.1.0-beta.40", features = ["static-firstparty"] }
-mcpg-plugin-host     = { git = "https://github.com/mcpg-dev/mcpg-plugin-host", tag = "v0.1.0-beta.41", version = "=0.1.0-beta.41" }
+mcpg-plugin-protocol = { git = "https://github.com/mcpg-dev/mcpg-plugin-protocol", tag = "v0.1.0-beta.40", version = "=0.1.0-beta.40" }
+mcpg-plugin-sdk      = { git = "https://github.com/mcpg-dev/mcpg-plugin-sdk", tag = "v0.1.0-beta.41", version = "=0.1.0-beta.41", features = ["static-firstparty"] }
+mcpg-plugin-host     = { git = "https://github.com/mcpg-dev/mcpg-plugin-host", tag = "v0.1.0-beta.42", version = "=0.1.0-beta.42" }
 async-trait    = "0.1"
 base64         = "0.23"
 chrono         = { version = "0.4", features = ["clock"] }
@@ -32,6 +33,10 @@ chrono         = { version = "0.4", features = ["clock"] }
 # executor/reactor integration + rustls TLS (NOT native-tls — deny.toml bans
 # openssl/native-tls).
 lapin          = "4.10"
+# The crypto provider the plugin installs: a build that links both rustls
+# providers has none by default, and lapin's TLS connector builds its
+# configuration from the default.
+rustls         = { version = "0.23", default-features = false, features = ["ring", "std"] }
 metrics        = "0.24"
 serde          = { version = "1", features = ["derive"] }
 serde_json     = "1"

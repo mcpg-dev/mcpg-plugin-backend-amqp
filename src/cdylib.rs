@@ -36,6 +36,7 @@ impl AmqpBackendCdylib {
     /// Infallible cdylib factory. `config_json` is ignored — AMQP carries no
     /// plugin-level config (per-binding uri / op arrive via `register_profile`).
     pub fn from_host_config(_config_json: &str, host: HostHandle) -> Self {
+        crate::install_crypto_provider();
         let inner = AmqpBackendPlugin::new();
         let _installed = inner.set_host_handle(host.clone());
         Self {
@@ -82,7 +83,8 @@ impl SyncBackendPlugin for AmqpBackendCdylib {
     }
 }
 
-// cdylib export — one `backend` entity under `dev.mcpg.backend.amqp`.
+// cdylib export — a `backend` entity and the `amqp_queue` watch strategy
+// under `dev.mcpg.backend.amqp`.
 mcpg_plugin_sdk::declare_plugin! {
     plugin_id: "dev.mcpg.backend.amqp",
     plugin_version: env!("CARGO_PKG_VERSION"),
@@ -106,6 +108,12 @@ mcpg_plugin_sdk::declare_plugin! {
             plugin_type: AmqpBackendCdylib,
             factory: |cfg, host: ::mcpg_plugin_sdk::HostHandle|
                 AmqpBackendCdylib::from_host_config(cfg, host),
+        },
+        watch_strategy as watch {
+            inner_name: "watch",
+            plugin_type: crate::watch::AmqpWatchCdylib,
+            factory: |cfg, host: ::mcpg_plugin_sdk::HostHandle|
+                crate::watch::AmqpWatchCdylib::from_host_config(cfg, host),
         },
     ],
 }
